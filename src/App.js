@@ -133,9 +133,15 @@ const FACS = () => {
         view: view,
         source: "pc"
       };
-      const response = await fetch(`${apiUrl.replace(/\/$/, '')}/api/process-annotation`, {
+      const cleanUrl = apiUrl.replace(/\/$/, '');
+      const isNgrok = cleanUrl.includes('ngrok');
+      const isHuggingFace = cleanUrl.includes('hf.space') || cleanUrl.includes('huggingface.co');
+      const extraHeaders = {};
+      if (isNgrok) extraHeaders['ngrok-skip-browser-warning'] = 'true';
+      if (isHuggingFace) extraHeaders['X-Requested-With'] = 'XMLHttpRequest';
+      const response = await fetch(`${cleanUrl}/api/process-annotation`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...extraHeaders },
         body: JSON.stringify(annotationData)
       });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -538,7 +544,7 @@ const FACS = () => {
                       : 'text-gray-400 hover:text-gray-200'
                   }`}
                 >
-                  Hosted (Ngrok)
+                  Hosted / Remote
                 </button>
               </div>
 
@@ -561,15 +567,18 @@ const FACS = () => {
               ) : (
                 <div className="animate-in slide-in-from-right-2 duration-200">
                   <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Ngrok / Hosted URL
+                    Remote Server URL
                   </label>
                   <input
                     type="text"
-                    placeholder="https://your-ngrok-url.ngrok-free.app"
+                    placeholder="https://your-ngrok-url.ngrok-free.app or https://user-space.hf.space"
                     value={tempApiUrl}
                     onChange={(e) => setTempApiUrl(e.target.value)}
                     className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white outline-none transition-all"
                   />
+                  <p className="text-xs text-gray-500 mt-2">
+                    Supports: <span className="text-gray-400">Ngrok</span> · <span className="text-gray-400">HuggingFace Spaces</span> · <span className="text-gray-400">Any HTTPS endpoint</span>
+                  </p>
                 </div>
               )}
               
