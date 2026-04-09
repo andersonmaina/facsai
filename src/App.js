@@ -197,7 +197,7 @@ const FACS = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
-      <div className="bg-black border-b border-gray-700 p-4 shadow-sm flex justify-between items-center">
+      <div className="bg-gray-800 border-b border-gray-700 p-4 shadow-sm flex justify-between items-center">
         <div className="w-10"></div>
         <h1 className="text-2xl font-bold text-center text-gray-100">FACS - Fetal anomaly classifier</h1>
         <button 
