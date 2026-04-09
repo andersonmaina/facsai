@@ -1,7 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Upload, ImageIcon, Square, Trash2, Send, Settings, Globe } from 'lucide-react';
 
-
 const FACS = () => {
   const [activeTab, setActiveTab] = useState('annotation');
   const [image, setImage] = useState(null);
@@ -21,7 +20,6 @@ const FACS = () => {
   const [port, setPort] = useState(localStorage.getItem('facs_port') || '5000');
   const [isSettingsOpen, setIsSettingsOpen] = useState(!localStorage.getItem('facs_api_url'));
   const [tempApiUrl, setTempApiUrl] = useState(localStorage.getItem('facs_api_url') || '');
-
 
   const imageRef = useRef(null);
   const containerRef = useRef(null);
@@ -122,9 +120,7 @@ const FACS = () => {
     }
     setError('');
     try {
-
       await new Promise(resolve => setTimeout(resolve, 0));
-      var source = "pc";
       const annotationData = {
         image: image,
         coordinates: {
@@ -135,20 +131,17 @@ const FACS = () => {
         },
         category: category,
         view: view,
-        source: source
+        source: "pc"
       };
       const response = await fetch(`${apiUrl.replace(/\/$/, '')}/api/process-annotation`, {
-
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(annotationData)
       });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const result = await response.json();
-      console.log(result)
       setActiveTab('results');
       setResults(result);
-      
     } catch (err) {
       setError(`Failed to process annotation: ${err.message}`);
       console.error('Submission error:', err);
@@ -165,13 +158,11 @@ const FACS = () => {
     setError('');
   };
 
-  const clearBox = () =>{
-    setBoundingBox(null);
-  }
+  const clearBox = () => setBoundingBox(null);
 
   const addBox = () => {
     if (!image) return;
-    setBoundingBox({ x: 225, y: 309, width: 287, height: 280});
+    setBoundingBox({ x: 225, y: 309, width: 287, height: 280 });
   };
 
   const clearResults = () => {
@@ -189,7 +180,6 @@ const FACS = () => {
         finalUrl = 'https://' + finalUrl;
       }
     }
-    
     if (!finalUrl && connectionType === 'hosted') return;
 
     setApiUrl(finalUrl);
@@ -199,11 +189,9 @@ const FACS = () => {
     setIsSettingsOpen(false);
   };
 
-
-
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
-      <div className="bg-black-0 border-b border-gray-700 p-4 shadow-sm flex justify-between items-center">
+      <div className="bg-black border-b border-gray-700 p-4 shadow-sm flex justify-between items-center">
         <div className="w-10"></div>
         <h1 className="text-2xl font-bold text-center text-gray-100">FACS - Fetal anomaly classifier</h1>
         <button 
@@ -219,7 +207,7 @@ const FACS = () => {
           <Settings className="w-6 h-6" />
         </button>
       </div>
-      {/*Annotation tab*/}
+      
       <div className="bg-gray-800 border-b border-gray-700 shadow-sm">
         <div className="flex">
           <button
@@ -246,7 +234,7 @@ const FACS = () => {
       </div>
       
       <div className="flex-1 flex">
-        {/*image container*/activeTab === 'annotation' ? (
+        {activeTab === 'annotation' ? (
           <>
             <div className="flex-1 p-6">
               <div className="bg-gray-800 rounded-lg border border-gray-700 h-full shadow-sm">
@@ -300,7 +288,7 @@ const FACS = () => {
               </div>
             </div>
             
-            </*panel*/div className="w-80 p-6 bg-gray-800 border-l border-gray-700">
+            <div className="w-80 p-6 bg-gray-800 border-l border-gray-700">
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-4 text-gray-200">Image Information</h3>
@@ -390,7 +378,7 @@ const FACS = () => {
                   </div>
                 )}
                 <div className="space-y-3">
-                <button
+                  <button
                     onClick={clearImage}
                     disabled={!image}
                     className="w-full bg-gray-600 hover:bg-gray-500 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg py-2 px-4 font-medium text-white flex items-center justify-center"
@@ -418,7 +406,7 @@ const FACS = () => {
                   >
                     {isSubmitting ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-5 border-white mr-2"></div> Processing...
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div> Processing...
                       </>
                     ) : (
                       <>
@@ -426,14 +414,11 @@ const FACS = () => {
                       </>
                     )}
                   </button>
-                  
-                  
                 </div>
               </div>
             </div>
           </>
         ) : (
-         /*Results tab*/
           <div className="flex-1 p-6">
             <div className="bg-gray-800 rounded-lg border border-gray-700 h-full shadow-sm">
               <div className="p-6">
@@ -519,7 +504,6 @@ const FACS = () => {
         )}
       </div>
 
-      {/* Settings Modal */}
       {isSettingsOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-800 rounded-xl border border-gray-700 shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
@@ -594,7 +578,6 @@ const FACS = () => {
                   <button
                     onClick={() => {
                       setIsSettingsOpen(false);
-                      // Reset to current values
                       setConnectionType(localStorage.getItem('facs_conn_type') || 'local');
                       setPort(localStorage.getItem('facs_port') || '5000');
                     }}
@@ -612,12 +595,10 @@ const FACS = () => {
                 </button>
               </div>
             </div>
-
           </div>
         </div>
       )}
     </div>
-
   );
 };
 
