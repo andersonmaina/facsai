@@ -1,5 +1,8 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Upload, ImageIcon, Square, Trash2, Send, Settings, Globe } from 'lucide-react';
+import { Upload, ImageIcon, Square, Trash2, Send, Settings, Globe, CheckCircle } from 'lucide-react';
+
+// Default Railway backend
+const DEFAULT_RAILWAY_URL = 'https://facs-production.up.railway.app';
 
 const FACS = () => {
   const [activeTab, setActiveTab] = useState('annotation');
@@ -15,11 +18,11 @@ const FACS = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState('');
-  const [apiUrl, setApiUrl] = useState(localStorage.getItem('facs_api_url') || '');
-  const [connectionType, setConnectionType] = useState(localStorage.getItem('facs_conn_type') || 'local');
+  const [apiUrl, setApiUrl] = useState(localStorage.getItem('facs_api_url') || DEFAULT_RAILWAY_URL);
+  const [connectionType, setConnectionType] = useState(localStorage.getItem('facs_conn_type') || 'railway');
   const [port, setPort] = useState(localStorage.getItem('facs_port') || '5000');
-  const [isSettingsOpen, setIsSettingsOpen] = useState(!localStorage.getItem('facs_api_url'));
-  const [tempApiUrl, setTempApiUrl] = useState(localStorage.getItem('facs_api_url') || '');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [tempApiUrl, setTempApiUrl] = useState(localStorage.getItem('facs_api_url') || DEFAULT_RAILWAY_URL);
 
   const imageRef = useRef(null);
   const containerRef = useRef(null);
@@ -180,13 +183,15 @@ const FACS = () => {
     let finalUrl = '';
     if (connectionType === 'local') {
       finalUrl = `http://localhost:${port.trim()}`;
+    } else if (connectionType === 'railway') {
+      finalUrl = DEFAULT_RAILWAY_URL;
     } else {
       finalUrl = tempApiUrl.trim();
       if (finalUrl && !finalUrl.startsWith('http')) {
         finalUrl = 'https://' + finalUrl;
       }
     }
-    if (!finalUrl && connectionType === 'hosted') return;
+    if (!finalUrl && connectionType === 'custom') return;
 
     setApiUrl(finalUrl);
     localStorage.setItem('facs_api_url', finalUrl);
@@ -202,9 +207,9 @@ const FACS = () => {
         <h1 className="text-2xl font-bold text-center text-gray-100">FACS - Fetal anomaly classifier</h1>
         <button 
           onClick={() => {
-            setTempApiUrl(apiUrl);
+            setTempApiUrl(connectionType === 'railway' ? DEFAULT_RAILWAY_URL : (apiUrl || DEFAULT_RAILWAY_URL));
             setPort(localStorage.getItem('facs_port') || '5000');
-            setConnectionType(localStorage.getItem('facs_conn_type') || 'local');
+            setConnectionType(localStorage.getItem('facs_conn_type') || 'railway');
             setIsSettingsOpen(true);
           }}
           className="p-2 text-gray-400 hover:text-white transition-colors"
@@ -525,30 +530,66 @@ const FACS = () => {
             </p>
             
             <div className="space-y-6">
-              <div className="flex p-1 bg-gray-900 rounded-lg border border-gray-700">
+              <div className="flex flex-col space-y-2">
+                {/* Railway - Default Option */}
+                <button
+                  onClick={() => setConnectionType('railway')}
+                  className={`flex items-center p-4 rounded-lg border-2 transition-all ${
+                    connectionType === 'railway' 
+                      ? 'bg-blue-600 border-blue-500 text-white shadow-lg' 
+                      : 'bg-gray-900 border-gray-700 text-gray-300 hover:bg-gray-800'
+                  }`}
+                >
+                  <CheckCircle className={`w-5 h-5 mr-3 flex-shrink-0 ${connectionType === 'railway' ? 'text-white' : 'text-gray-500'}`} />
+                  <div className="text-left flex-1">
+                    <div className="font-medium flex items-center">
+                      Railway (Cloud) 
+                      <span className="ml-2 text-xs bg-green-600 px-2 py-1 rounded font-semibold">DEFAULT</span>
+                    </div>
+                    <div className={`text-xs mt-1 ${connectionType === 'railway' ? 'text-blue-100' : 'text-gray-500'}`}>
+                      {DEFAULT_RAILWAY_URL}
+                    </div>
+                  </div>
+                </button>
+
+                {/* Local Server */}
                 <button
                   onClick={() => setConnectionType('local')}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                  className={`flex items-center p-4 rounded-lg border-2 transition-all ${
                     connectionType === 'local' 
-                      ? 'bg-blue-600 text-white shadow-lg' 
-                      : 'text-gray-400 hover:text-gray-200'
+                      ? 'bg-blue-600 border-blue-500 text-white shadow-lg' 
+                      : 'bg-gray-900 border-gray-700 text-gray-300 hover:bg-gray-800'
                   }`}
                 >
-                  Local Server
+                  <CheckCircle className={`w-5 h-5 mr-3 flex-shrink-0 ${connectionType === 'local' ? 'text-white' : 'text-gray-500'}`} />
+                  <div className="text-left flex-1">
+                    <div className="font-medium">Local Server</div>
+                    <div className={`text-xs mt-1 ${connectionType === 'local' ? 'text-blue-100' : 'text-gray-500'}`}>
+                      For development/testing
+                    </div>
+                  </div>
                 </button>
+
+                {/* Custom Server */}
                 <button
-                  onClick={() => setConnectionType('hosted')}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
-                    connectionType === 'hosted' 
-                      ? 'bg-blue-600 text-white shadow-lg' 
-                      : 'text-gray-400 hover:text-gray-200'
+                  onClick={() => setConnectionType('custom')}
+                  className={`flex items-center p-4 rounded-lg border-2 transition-all ${
+                    connectionType === 'custom' 
+                      ? 'bg-blue-600 border-blue-500 text-white shadow-lg' 
+                      : 'bg-gray-900 border-gray-700 text-gray-300 hover:bg-gray-800'
                   }`}
                 >
-                  Hosted / Remote
+                  <CheckCircle className={`w-5 h-5 mr-3 flex-shrink-0 ${connectionType === 'custom' ? 'text-white' : 'text-gray-500'}`} />
+                  <div className="text-left flex-1">
+                    <div className="font-medium">Custom Server</div>
+                    <div className={`text-xs mt-1 ${connectionType === 'custom' ? 'text-blue-100' : 'text-gray-500'}`}>
+                      Ngrok, HuggingFace, or other
+                    </div>
+                  </div>
                 </button>
               </div>
 
-              {connectionType === 'local' ? (
+              {connectionType === 'local' && (
                 <div className="animate-in slide-in-from-left-2 duration-200">
                   <label className="block text-sm font-medium text-gray-300 mb-1">
                     Local Port
@@ -560,11 +601,13 @@ const FACS = () => {
                       placeholder="5000"
                       value={port}
                       onChange={(e) => setPort(e.target.value)}
-                      className="flex-1 px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white outline-none transition-all font-mono"
+                      className="flex-1 px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white outline-none transition-all"
                     />
                   </div>
                 </div>
-              ) : (
+              )}
+
+              {connectionType === 'custom' && (
                 <div className="animate-in slide-in-from-right-2 duration-200">
                   <label className="block text-sm font-medium text-gray-300 mb-1">
                     Remote Server URL
@@ -587,7 +630,7 @@ const FACS = () => {
                   <button
                     onClick={() => {
                       setIsSettingsOpen(false);
-                      setConnectionType(localStorage.getItem('facs_conn_type') || 'local');
+                      setConnectionType(localStorage.getItem('facs_conn_type') || 'railway');
                       setPort(localStorage.getItem('facs_port') || '5000');
                     }}
                     className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors"
@@ -597,8 +640,8 @@ const FACS = () => {
                 )}
                 <button
                   onClick={saveApiUrl}
-                  disabled={connectionType === 'local' ? !port.trim() : !tempApiUrl.trim()}
-                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white font-medium rounded-lg transition-colors shadow-lg shadow-blue-900/20"
+                  disabled={connectionType === 'local' ? !port.trim() : (connectionType === 'custom' ? !tempApiUrl.trim() : false)}
+                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white font-medium rounded-lg transition-colors shadow-lg"
                 >
                   Save Connection
                 </button>
