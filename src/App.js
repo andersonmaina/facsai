@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Upload, ImageIcon, Square, Trash2, Send, Settings, Globe, CheckCircle } from 'lucide-react';
+import { Upload, ImageIcon, Square, Trash2, Send, Settings, Globe, CheckCircle, FlaskConical } from 'lucide-react';
 
 // Default Railway backend (defined in .env)
 const DEFAULT_RAILWAY_URL = process.env.REACT_APP_RAILWAY_URL || '';
@@ -23,6 +23,7 @@ const FACS = () => {
   const [port, setPort] = useState(localStorage.getItem('facs_port') || '5000');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [tempApiUrl, setTempApiUrl] = useState(localStorage.getItem('facs_api_url') || DEFAULT_RAILWAY_URL);
+  const [tutorialStep, setTutorialStep] = useState(null); // null | 'add-box' | 'submit'
 
   const imageRef = useRef(null);
   const containerRef = useRef(null);
@@ -114,6 +115,7 @@ const FACS = () => {
 
   const submitAnnotation = async () => {
     if (!image || !boundingBox) return;
+    setTutorialStep(null);
     setIsSubmitting(true);
     if (!apiUrl) {
       setError('Please set the API URL in settings first.');
@@ -169,9 +171,28 @@ const FACS = () => {
 
   const clearBox = () => setBoundingBox(null);
 
+  const loadSampleImage = () => {
+    const img = new Image();
+    img.onload = () => {
+      setImageDimensions({ width: img.width, height: img.height });
+      // Convert to dataURL via canvas so it behaves like an uploaded file
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      setImage(canvas.toDataURL('image/jpeg'));
+      setBoundingBox(null);
+      setResults(null);
+      setError('');
+      setTutorialStep('add-box');
+    };
+    img.src = `${process.env.PUBLIC_URL}/sample.jpg`;
+  };
+
   const addBox = () => {
     if (!image) return;
     setBoundingBox({ x: 225, y: 309, width: 287, height: 280 });
+    if (tutorialStep === 'add-box') setTutorialStep('submit');
   };
 
   const clearResults = () => {
@@ -250,8 +271,8 @@ const FACS = () => {
             <div className="flex-1 p-6">
               <div className="bg-gray-800 rounded-lg border border-gray-700 h-full shadow-sm">
                 {!image ? (
-                  <div className="h-full flex items-center justify-center">
-                    <label className="cursor-pointer bg-gray-700 hover:bg-gray-600 rounded-lg p-8 border-2 border-dashed border-gray-600 hover:border-gray-500">
+                  <div className="h-full flex items-center justify-center gap-4">
+                    <label className="cursor-pointer bg-gray-700 hover:bg-gray-600 rounded-lg p-8 border-2 border-dashed border-gray-600 hover:border-gray-500 transition-colors">
                       <div className="text-center">
                         <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                         <p className="text-lg font-medium text-gray-200">Upload Image</p>
@@ -259,6 +280,16 @@ const FACS = () => {
                       </div>
                       <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                     </label>
+                    <button
+                      onClick={loadSampleImage}
+                      className="cursor-pointer bg-gray-700 hover:bg-indigo-700 rounded-lg p-8 border-2 border-dashed border-indigo-600 hover:border-indigo-400 transition-colors group"
+                    >
+                      <div className="text-center">
+                        <FlaskConical className="mx-auto h-12 w-12 text-indigo-400 group-hover:text-indigo-200 mb-4 transition-colors" />
+                        <p className="text-lg font-medium text-indigo-300 group-hover:text-white transition-colors">Test Sample</p>
+                        <p className="text-sm text-gray-400 mt-2">Load a demo ultrasound</p>
+                      </div>
+                    </button>
                   </div>
                 ) : (
                   <div className="p-4 h-full overflow-auto">
@@ -396,13 +427,30 @@ const FACS = () => {
                   >
                     <Trash2 className="w-4 h-4 mr-2" /> Clear Image
                   </button>
-                  <button
-                    onClick={addBox}
-                    disabled={!image || boundingBox !== null}
-                    className="w-full bg-gray-600 hover:bg-gray-500 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg py-2 px-4 font-medium text-white flex items-center justify-center"
-                  >
-                    <Square className="w-4 h-4 mr-2" /> Add Box
-                  </button>
+                  {/* Add Box with tutorial arrow */}
+                  <div className="relative">
+                    {tutorialStep === 'add-box' && (
+                      <div className="absolute -left-36 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                        <div className="bg-indigo-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap animate-pulse">
+                          Click Add Box first
+                        </div>
+                        <svg className="w-5 h-5 text-indigo-400 animate-bounce" style={{transform:'rotate(-90deg)'}} fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 3a1 1 0 011 1v9.586l2.293-2.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L9 13.586V4a1 1 0 011-1z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    )}
+                    <button
+                      onClick={addBox}
+                      disabled={!image || boundingBox !== null}
+                      className={`w-full rounded-lg py-2 px-4 font-medium text-white flex items-center justify-center transition-all ${
+                        tutorialStep === 'add-box'
+                          ? 'bg-indigo-600 hover:bg-indigo-500 ring-2 ring-indigo-400 ring-offset-2 ring-offset-gray-800 shadow-lg shadow-indigo-500/30'
+                          : 'bg-gray-600 hover:bg-gray-500 disabled:bg-gray-700 disabled:cursor-not-allowed'
+                      }`}
+                    >
+                      <Square className="w-4 h-4 mr-2" /> Add Box
+                    </button>
+                  </div>
                   <button
                     onClick={clearBox}
                     disabled={!image || !boundingBox}
@@ -410,21 +458,38 @@ const FACS = () => {
                   >
                     <Trash2 className="w-4 h-4 mr-2" /> Clear Box
                   </button>
-                  <button
-                    onClick={submitAnnotation}
-                    disabled={!image || !boundingBox || isSubmitting}
-                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg py-2 px-4 font-medium text-white flex items-center justify-center"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div> Processing...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4 mr-2" /> Submit Annotation
-                      </>
+                  {/* Submit with tutorial arrow */}
+                  <div className="relative">
+                    {tutorialStep === 'submit' && (
+                      <div className="absolute -left-40 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                        <div className="bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap animate-pulse">
+                          Now submit
+                        </div>
+                        <svg className="w-5 h-5 text-blue-400 animate-bounce" style={{transform:'rotate(-90deg)'}} fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 3a1 1 0 011 1v9.586l2.293-2.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L9 13.586V4a1 1 0 011-1z" clipRule="evenodd" />
+                        </svg>
+                      </div>
                     )}
-                  </button>
+                    <button
+                      onClick={submitAnnotation}
+                      disabled={!image || !boundingBox || isSubmitting}
+                      className={`w-full rounded-lg py-2 px-4 font-medium text-white flex items-center justify-center transition-all ${
+                        tutorialStep === 'submit'
+                          ? 'bg-blue-500 hover:bg-blue-400 ring-2 ring-blue-300 ring-offset-2 ring-offset-gray-800 shadow-lg shadow-blue-500/30'
+                          : 'bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed'
+                      }`}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div> Processing...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-2" /> Submit Annotation
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
