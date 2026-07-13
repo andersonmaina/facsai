@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/proxy/:path*",
+      "destination": "https://facs-production-c09d.up.railway.app/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

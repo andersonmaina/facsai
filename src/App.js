@@ -1,8 +1,8 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Upload, ImageIcon, Square, Trash2, Send, Settings, Globe, CheckCircle } from 'lucide-react';
 
-// Default Railway backend
-const DEFAULT_RAILWAY_URL = 'https://facs-production.up.railway.app';
+// Default Railway backend (defined in .env)
+const DEFAULT_RAILWAY_URL = process.env.REACT_APP_RAILWAY_URL || '';
 
 const FACS = () => {
   const [activeTab, setActiveTab] = useState('annotation');
@@ -542,12 +542,16 @@ const FACS = () => {
                 >
                   <CheckCircle className={`w-5 h-5 mr-3 flex-shrink-0 ${connectionType === 'railway' ? 'text-white' : 'text-gray-500'}`} />
                   <div className="text-left flex-1">
-                    <div className="font-medium flex items-center">
-                      Railway (Cloud) 
-                      <span className="ml-2 text-xs bg-green-600 px-2 py-1 rounded font-semibold">DEFAULT</span>
+                    <div className="font-medium flex items-center flex-wrap gap-y-1">
+                      FACS-XPM3
+                      <span className="ml-2 text-xs bg-[#FF9900] text-black px-2 py-0.5 rounded font-bold tracking-wide">AWS</span>
+                      <span className={`ml-1 text-xs px-2 py-0.5 rounded font-medium border ${connectionType === 'railway' ? 'border-blue-300 text-blue-100' : 'border-gray-600 text-gray-500'}`}>Recommended</span>
                     </div>
-                    <div className={`text-xs mt-1 ${connectionType === 'railway' ? 'text-blue-100' : 'text-gray-500'}`}>
-                      {DEFAULT_RAILWAY_URL}
+                    <div className={`text-xs mt-1 flex items-center gap-1 ${connectionType === 'railway' ? 'text-blue-100' : 'text-gray-500'}`}>
+                      <span>λ</span>
+                      <span>EC2 Lambda</span>
+                      <span className="opacity-50">·</span>
+                      <span>us-east-1</span>
                     </div>
                   </div>
                 </button>
